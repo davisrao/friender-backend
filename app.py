@@ -1,6 +1,7 @@
+from logging import debug
 import os
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, jsonify, request, flash, redirect, session, g
 # from flask_debugtoolbar import DebugToolbarExtension
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
@@ -27,3 +28,49 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 # toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
+
+##############################################################################
+# User Routes
+@app.get('/users')
+def list_users():
+    """Returns JSON list of all user dictionaries.
+        {users:[{user1},...]}
+    """
+
+    users = User.query.all()
+    serialized = [User.serialize(user) for user in users]
+
+    return jsonify(users=serialized)
+
+@app.route('/users', methods=["GET","POST"])
+def create_user():
+    """Takes is user info as dictionary,
+    Adds a new user to the database, and returns added user object.
+        {
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "hobbies",
+            "interests",
+            "zip_code",
+            "image"         
+        }
+    """
+    # breakpoint()
+
+    user = User.signup(
+        
+            username=request.json["username"],
+            first_name=request.json["first_name"],
+            last_name=request.json["last_name"],
+            email=request.json["email"],
+            hobbies=request.json["hobbies"],
+            interests=request.json["interests"],
+            zip_code=request.json["zip_code"],
+            image=request.json["image"],
+            password=request.json["password"],
+        )
+    serialized = User.serialize(user)
+
+    return jsonify(user=serialized)

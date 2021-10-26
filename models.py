@@ -62,6 +62,56 @@ class User(db.Model):
         nullable=False,
     )
 
+    @classmethod
+    def serialize(cls, self):
+        """Serialize to dictionary"""
+        return {
+            "username": self.username,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "email": self.email,
+            "hobbies": self.hobbies,
+            "interests": self.interests,
+            "zip_code": self.zip_code,
+            "image": self.image
+        }
+
+    @classmethod
+    def signup(
+            cls, 
+            username,
+            first_name,
+            last_name,
+            email,
+            hobbies,
+            interests,
+            zip_code,
+            image,
+            password):
+        """Sign up user.
+
+        Hashes password and adds user to system.
+        """
+
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+
+        user = User(
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            hobbies=hobbies,
+            interests=interests,
+            zip_code=zip_code,
+            image=image,
+            password=hashed_pwd,
+        )
+
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+
 
 def connect_db(app):
     """Connect this database to provided Flask app.
