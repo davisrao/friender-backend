@@ -71,19 +71,23 @@ def create_user():
         }
     """
 
-    # print("request.files['file]: ", request.files['file'])
     print("request: ", request)
-    breakpoint()
+
     img = request.files['file']
     if img:
         filename = secure_filename(img.filename)
-        img.save(filename)
-        s3.upload_file(
-            Bucket = os.environ['BUCKET'],
-            Filename=filename,
-            Key = filename
+        s3.upload_fileobj(
+            img, 
+            os.environ['BUCKET'], 
+            filename, 
+            ExtraArgs={"ACL":"public-read"}
         )
-    breakpoint()
+
+        # TODO: maybe pull img URL right when it is needed
+        img_url = boto3.client('s3').generate_presigned_url(
+        ClientMethod='get_object', 
+        Params={'Bucket': os.environ['BUCKET'], 'Key': filename}, ExpiresIn=6000)
+
     user = User.signup(
             username=request.form["username"],
             first_name=request.form["firstName"],
@@ -92,7 +96,7 @@ def create_user():
             hobbies=request.form["hobbies"],
             interests=request.form["interests"],
             zip_code=request.form["zipCode"],
-            image=filename,
+            image=img_url,
             password=request.form["password"],
         )
     serialized = User.serialize(user)
