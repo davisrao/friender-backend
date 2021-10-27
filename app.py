@@ -55,6 +55,17 @@ def list_users():
 
     return jsonify(users=serialized)
 
+@app.get('/users/<int:user_id>')
+def get_user(user_id):
+    """Show user profile."""
+
+    user = User.query.get_or_404(user_id)
+    serialize = User.serialize(user)
+
+    return jsonify(user=serialize)
+
+
+
 @app.route('/users', methods=["GET","POST"])
 def create_user():
     """Takes is user info as dictionary,
@@ -83,10 +94,10 @@ def create_user():
             ExtraArgs={"ACL":"public-read"}
         )
 
-        # TODO: maybe pull img URL right when it is needed
-        img_url = boto3.client('s3').generate_presigned_url(
-        ClientMethod='get_object', 
-        Params={'Bucket': os.environ['BUCKET'], 'Key': filename}, ExpiresIn=6000)
+        # TODO: call this when image is needed
+        # img_url = boto3.client('s3').generate_presigned_url(
+        # ClientMethod='get_object', 
+        # Params={'Bucket': os.environ['BUCKET'], 'Key': filename}, ExpiresIn=6000)
 
     user = User.signup(
             username=request.form["username"],
@@ -96,8 +107,46 @@ def create_user():
             hobbies=request.form["hobbies"],
             interests=request.form["interests"],
             zip_code=request.form["zipCode"],
-            image=img_url,
+            image=filename,
             password=request.form["password"],
         )
     serialized = User.serialize(user)
     return jsonify(user=serialized)
+
+@app.route('/users/<int:user_id>', methods=['PATCH'])
+def edit_user(user_id):
+    """Updates a user. Reutrns updated user.
+    {
+        "username",
+        "first_name",
+        "last_name",
+        "email",
+        "hobbies",
+        "interests",
+        "zip_code",
+        "image"         
+    }
+    """
+    user = User.query.get_or_404(user_id)
+    newData = request.json
+    # breakpoint()
+    for key, value in newData.items():
+        # user[key] = value
+        setattr(user,key,value)
+    
+    db.session.add(user)
+    db.session.commit()
+    updated_user = User.query.get_or_404(user_id)
+    serialize = User.serialize(updated_user)
+
+    return jsonify(user=serialize)
+
+@app.route('/users/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    """Deletes a user. Returns {deleted:user_id}"""
+    user = User.query.get_or_404(user_id)
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return ({"deleted":user_id})

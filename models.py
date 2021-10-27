@@ -1,6 +1,7 @@
 """SQLAlchemy models for Warbler."""
 
 from datetime import datetime
+from enum import unique
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -13,10 +14,14 @@ db=SQLAlchemy()
 class User(db.Model):
     __tablename__ = 'users'
 
+    user_id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
     username = db.Column(
         db.Text,
         nullable=False,
-        primary_key=True,
+        unique=True,
     )
 
     first_name = db.Column(
