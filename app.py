@@ -1,4 +1,5 @@
 from logging import debug
+from werkzeug.utils import secure_filename
 import os
 
 from flask import Flask, jsonify, request, flash, redirect, session, g
@@ -15,6 +16,7 @@ dotenv.load_dotenv()
 CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
+import boto3
 
 bcrypt= Bcrypt()
 
@@ -29,6 +31,13 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 connect_db(app)
 
+s3 = boto3.client(
+  "s3",
+  "us-west-1",
+  aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+  aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+)
+
 ##############################################################################
 # User Routes
 @app.get('/users')
@@ -38,6 +47,7 @@ def list_users():
     """
 
     users = User.query.all()
+    breakpoint()
     serialized = [User.serialize(user) for user in users]
 
     return jsonify(users=serialized)
@@ -58,6 +68,16 @@ def create_user():
         }
     """
     # breakpoint()
+    #FIXME: While importing 'app', an ImportError was raised. due to boto3 import
+    img = request.files['file']
+    if img:
+        filename = secure_filename(img.filename)
+        # img.save(filename)
+        s3.upload_file(
+            Bucket = os.environ['BUCKET'],
+            Filename=filename,
+            Key = filename
+        )
 
     user = User.signup(
         
@@ -68,9 +88,14 @@ def create_user():
             hobbies=request.json["hobbies"],
             interests=request.json["interests"],
             zip_code=request.json["zip_code"],
-            image=request.json["image"],
+            image=filename,
             password=request.json["password"],
         )
     serialized = User.serialize(user)
 
     return jsonify(user=serialized)
+
+    """
+    1. function to call the sigup route passing in the form data
+    2. Then form data is in the route
+    """
