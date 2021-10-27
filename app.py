@@ -34,12 +34,12 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 connect_db(app)
 
-# s3 = boto3.client(
-#   "s3",
-#   "us-west-1",
-#   aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
-#   aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
-# )
+s3 = boto3.client(
+  "s3",
+  "us-west-1",
+  aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+  aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+)
 
 ##############################################################################
 # User Routes
@@ -70,18 +70,21 @@ def create_user():
             "image"         
         }
     """
+    print("request.json: ", request.json)
+    print("request.files['file]: ", request.files['file'])
+    print("request: ", request)
+    breakpoint()
+    # img = request.files['file']
+    # if img:
+    #     filename = secure_filename(img.filename)
+    #     img.save(filename)
+    #     s3.upload_file(
+    #         Bucket = os.environ['BUCKET'],
+    #         Filename=filename,
+    #         Key = filename
+    #     )
 
-    img = request.files['file']
-    if img:
-        filename = secure_filename(img.filename)
-        img.save(filename)
-        s3.upload_file(
-            Bucket = os.environ['BUCKET'],
-            Filename=filename,
-            Key = filename
-        )
-
-    print(request.json)
+    # print("image from app.py: ",img)
     user = User.signup(
             username=request.json["username"],
             first_name=request.json["firstName"],
@@ -90,7 +93,7 @@ def create_user():
             hobbies=request.json["hobbies"],
             interests=request.json["interests"],
             zip_code=request.json["zipCode"],
-            image=filename,
+            image="filename",
             password=request.json["password"],
         )
     serialized = User.serialize(user)
