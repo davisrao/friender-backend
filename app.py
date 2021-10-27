@@ -70,31 +70,30 @@ def create_user():
             "image"         
         }
     """
-    print("request.json: ", request.json)
-    print("request.files['file]: ", request.files['file'])
+
+    # print("request.files['file]: ", request.files['file'])
     print("request: ", request)
     breakpoint()
-    # img = request.files['file']
-    # if img:
-    #     filename = secure_filename(img.filename)
-    #     img.save(filename)
-    #     s3.upload_file(
-    #         Bucket = os.environ['BUCKET'],
-    #         Filename=filename,
-    #         Key = filename
-    #     )
-
-    # print("image from app.py: ",img)
+    img = request.files['file']
+    if img:
+        filename = secure_filename(img.filename)
+        img.save(filename)
+        s3.upload_file(
+            Bucket = os.environ['BUCKET'],
+            Filename=filename,
+            Key = filename
+        )
+    breakpoint()
     user = User.signup(
-            username=request.json["username"],
-            first_name=request.json["firstName"],
-            last_name=request.json["lastName"],
-            email=request.json["email"],
-            hobbies=request.json["hobbies"],
-            interests=request.json["interests"],
-            zip_code=request.json["zipCode"],
-            image="filename",
-            password=request.json["password"],
+            username=request.form["username"],
+            first_name=request.form["firstName"],
+            last_name=request.form["lastName"],
+            email=request.form["email"],
+            hobbies=request.form["hobbies"],
+            interests=request.form["interests"],
+            zip_code=request.form["zipCode"],
+            image=filename,
+            password=request.form["password"],
         )
     serialized = User.serialize(user)
     return jsonify(user=serialized)
