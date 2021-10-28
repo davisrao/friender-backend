@@ -71,6 +71,7 @@ class User(db.Model):
     def serialize(cls, self):
         """Serialize to dictionary"""
         return {
+            "user_id": self.user_id,
             "username": self.username,
             "first_name": self.first_name,
             "last_name": self.last_name,
@@ -114,8 +115,28 @@ class User(db.Model):
 
         db.session.add(user)
         db.session.commit()
+        # print (user.user_id)
         return user
 
+@classmethod
+def authenticate(cls, username, password):
+    """Find user with `username` and `password`.
+
+    This is a class method (call it on the class, not an individual user.)
+    It searches for a user whose password hash matches this password
+    and, if it finds such a user, returns that user object.
+
+    If can't find matching user (or if password is wrong), returns False.
+    """
+
+    user = cls.query.filter_by(username=username).first()
+
+    if user:
+        is_auth = bcrypt.check_password_hash(user.password, password)
+        if is_auth:
+            return user
+
+    return False
 
 
 def connect_db(app):

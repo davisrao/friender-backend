@@ -1,8 +1,9 @@
+import os
 from logging import debug
 from werkzeug.utils import secure_filename
-import os
 import boto3
 from flask_cors import CORS
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
 
 
 from flask import Flask, jsonify, request, flash, redirect, session, g
@@ -23,6 +24,9 @@ BASE_PHOTO_URL="https://s3.us-west-1.amazonaws.com/friender.davis.colin/"
 app = Flask(__name__)
 CORS(app)
 
+app.config["JWT_SECRET_KEY"] = os.environ['JWT_SECRET_KEY']  # Change this!
+jwt = JWTManager(app)
+
 bcrypt= Bcrypt()
 
 # Get DB_URI from environ variable (useful for production/testing) or,
@@ -42,6 +46,26 @@ s3 = boto3.client(
   aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
   aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
 )
+
+##############################################################################
+# Auth Routes
+@app.post('/login')
+def login_user():
+    username = request.json("username")
+    password = request.json("password")
+
+    isUser = User.authenticate(username, password)
+    
+    if isUser:
+        serialized = User.serialize(isUser)
+        access_token = create_access_token(identity=serialized)
+        return jsonify(token=access_token)
+    else:
+        return jsonify(error={
+            "error_message":"Username/password is incorrect.", 
+            "status_code":400}
+        )
+
 
 ##############################################################################
 # User Routes
@@ -65,7 +89,6 @@ def get_user(user_id):
 
 
     return jsonify(user=serialize)
-
 
 
 @app.post('/users')
@@ -100,19 +123,30 @@ def create_user():
         # user_image_url = boto3.client('s3').generate_presigned_url(
         #     ClientMethod='get_object', 
         #     Params={'Bucket': os.environ['BUCKET'], 'Key': user_image_name}, ExpiresIn=6000)
-    user = User.signup(
-            username=request.form["username"],
-            first_name=request.form["firstName"],
-            last_name=request.form["lastName"],
-            email=request.form["email"],
-            hobbies=request.form["hobbies"],
-            interests=request.form["interests"],
-            zip_code=request.form["zipCode"],
-            image=f"{BASE_PHOTO_URL}{filename}",
-            password=request.form["password"],
+    try:
+        user = User.signup(
+                username=request.form["username"],
+                first_name=request.form["firstName"],
+                last_name=request.form["lastName"],
+                email=request.form["email"],
+                hobbies=request.form["hobbies"],
+                interests=request.form["interests"],
+                zip_code=request.form["zipCode"],
+                image=f"{BASE_PHOTO_URL}{filename}",
+                password=request.form["password"],
+            )
+    except IntegrityError:
+        return jsonify(error={
+            "error_message":"A user with that username/email already exist.", 
+            "status_code":400}
         )
+
+
     serialized = User.serialize(user)
-    return jsonify(user=serialized)
+    access_token = create_access_token(identity=serialized)
+    breakpoint()
+    return jsonify(token=access_token)
+    # return jsonify(user=serialized)
 
 @app.patch('/users/<int:user_id>')
 def edit_user(user_id):
