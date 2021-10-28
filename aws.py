@@ -44,7 +44,6 @@ s3 = boto3.client(
 
 
 filename = secure_filename(img)
-breakpoint()
 # img.save(filename) // wasnt importing correctly testing without
 s3.upload_file(
     Bucket = os.environ['BUCKET'],

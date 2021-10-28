@@ -18,6 +18,8 @@ dotenv.load_dotenv()
 
 CURR_USER_KEY = "curr_user"
 
+BASE_PHOTO_URL="https://s3.us-west-1.amazonaws.com/friender.davis.colin/"
+
 app = Flask(__name__)
 CORS(app)
 
@@ -50,7 +52,6 @@ def list_users():
     """
 
     users = User.query.all()
-    breakpoint()
     serialized = [User.serialize(user) for user in users]
 
     return jsonify(users=serialized)
@@ -58,15 +59,16 @@ def list_users():
 @app.get('/users/<int:user_id>')
 def get_user(user_id):
     """Show user profile."""
-
     user = User.query.get_or_404(user_id)
     serialize = User.serialize(user)
+
+
 
     return jsonify(user=serialize)
 
 
 
-@app.route('/users', methods=["GET","POST"])
+@app.post('/users')
 def create_user():
     """Takes is user info as dictionary,
     Adds a new user to the database, and returns added user object.
@@ -94,11 +96,10 @@ def create_user():
             ExtraArgs={"ACL":"public-read"}
         )
 
-        # TODO: call this when image is needed
-        # img_url = boto3.client('s3').generate_presigned_url(
-        # ClientMethod='get_object', 
-        # Params={'Bucket': os.environ['BUCKET'], 'Key': filename}, ExpiresIn=6000)
-
+        #TODO: dont seem to need this to pull image but keeping in case it breaks because we know it can work
+        # user_image_url = boto3.client('s3').generate_presigned_url(
+        #     ClientMethod='get_object', 
+        #     Params={'Bucket': os.environ['BUCKET'], 'Key': user_image_name}, ExpiresIn=6000)
     user = User.signup(
             username=request.form["username"],
             first_name=request.form["firstName"],
@@ -107,13 +108,13 @@ def create_user():
             hobbies=request.form["hobbies"],
             interests=request.form["interests"],
             zip_code=request.form["zipCode"],
-            image=filename,
+            image=f"{BASE_PHOTO_URL}{filename}",
             password=request.form["password"],
         )
     serialized = User.serialize(user)
     return jsonify(user=serialized)
 
-@app.route('/users/<int:user_id>', methods=['PATCH'])
+@app.patch('/users/<int:user_id>')
 def edit_user(user_id):
     """Updates a user. Reutrns updated user.
     {
@@ -129,7 +130,6 @@ def edit_user(user_id):
     """
     user = User.query.get_or_404(user_id)
     newData = request.json
-    # breakpoint()
     for key, value in newData.items():
         # user[key] = value
         setattr(user,key,value)
@@ -141,7 +141,7 @@ def edit_user(user_id):
 
     return jsonify(user=serialize)
 
-@app.route('/users/<int:user_id>', methods=['POST'])
+@app.delete('/users/<int:user_id>')
 def delete_user(user_id):
     """Deletes a user. Returns {deleted:user_id}"""
     user = User.query.get_or_404(user_id)
