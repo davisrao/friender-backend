@@ -51,8 +51,9 @@ s3 = boto3.client(
 # Auth Routes
 @app.post('/login')
 def login_user():
-    username = request.json("username")
-    password = request.json("password")
+    # print(request.json)
+    username = request.json["username"]
+    password = request.json["password"]
 
     isUser = User.authenticate(username, password)
     
@@ -85,8 +86,6 @@ def get_user(user_id):
     """Show user profile."""
     user = User.query.get_or_404(user_id)
     serialize = User.serialize(user)
-
-
 
     return jsonify(user=serialize)
 
