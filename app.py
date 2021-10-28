@@ -9,7 +9,7 @@ from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_requir
 from flask import Flask, jsonify, request, flash, redirect, session, g
 # from flask_debugtoolbar import DebugToolbarExtension
 from flask_bcrypt import Bcrypt
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, InvalidRequestError
 
 # from forms import CSRFOnlyForm, EditUserForm, UserAddForm, LoginForm, MessageForm
 from models import db, connect_db, User
@@ -56,16 +56,15 @@ def login_user():
     password = request.json["password"]
 
     isUser = User.authenticate(username, password)
-    
+    print("isUser: ", isUser)
+
     if isUser:
         serialized = User.serialize(isUser)
         access_token = create_access_token(identity=serialized)
         return jsonify(token=access_token)
     else:
-        return jsonify(error={
-            "error_message":"Username/password is incorrect.", 
-            "status_code":400}
-        )
+        return {"errors": "Username/password is incorrect." }
+        # refactor: maybe refactor how errors are handled
 
 
 ##############################################################################
@@ -135,10 +134,7 @@ def create_user():
                 password=request.form["password"],
             )
     except IntegrityError:
-        return jsonify(error={
-            "error_message":"A user with that username/email already exist.", 
-            "status_code":400}
-        )
+        raise IntegrityError("A user with that username/email already exist.")
 
 
     serialized = User.serialize(user)
