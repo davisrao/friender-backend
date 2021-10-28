@@ -134,7 +134,7 @@ def create_user():
                 password=request.form["password"],
             )
     except IntegrityError:
-        raise IntegrityError("A user with that username/email already exist.")
+        return {"errors": "A user with that username/email already exist." }
 
 
     serialized = User.serialize(user)
