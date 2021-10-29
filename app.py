@@ -12,7 +12,7 @@ from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 
 # from forms import CSRFOnlyForm, EditUserForm, UserAddForm, LoginForm, MessageForm
-from models import db, connect_db, User
+from models import db, connect_db, User, Action
 
 import dotenv
 dotenv.load_dotenv()
@@ -198,3 +198,21 @@ def get_users_by_zip_code(zip_code):
     filtered_users = User.query.filter_by(zip_code=zip_code).all()
     serialized = [User.serialize(user) for user in filtered_users]
     return jsonify(users=serialized)
+
+# Auth Routes
+@app.post('/action')
+def add_action():
+
+    acting_user_id = request.json["acting_user_id"]
+    targeted_user_id = request.json["targeted_user_id"]
+    action = request.json["action"]
+
+    action = Action.add(acting_user_id, targeted_user_id,action)
+    print("action added: ", action)
+
+    if action:
+        serialized = Action.serialize(action)
+        return jsonify(action=serialized)
+    else:
+        return {"errors": "Unable to process action!" }
+        # refactor: maybe refactor how errors are handled

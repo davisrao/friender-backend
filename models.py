@@ -139,6 +139,47 @@ class User(db.Model):
         return False
 
 
+class Action(db.Model):
+    __tablename__ = 'actions'
+
+    acting_user_id= db.Column(
+        db.Integer,
+        db.ForeignKey('users.user_id', ondelete="cascade"),
+        primary_key=True,
+    )
+    targeted_user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.user_id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    action = db.Column(
+        db.Text,
+        nullable=False,
+    )
+    @classmethod
+    def add(cls,
+            acting_user_id, targeted_user_id,action):
+        """add action to db.
+        """
+        action=Action(acting_user_id=acting_user_id, 
+                        targeted_user_id=targeted_user_id,
+                        action=action)
+
+        db.session.add(action)
+        db.session.commit()
+
+        return action
+
+    @classmethod
+    def serialize(cls, self):
+        """Serialize to dictionary"""
+        return {
+            "acting_user_id": self.acting_user_id,
+            "targeted_user_id": self.targeted_user_id,
+            "action": self.action,
+        }
+
 def connect_db(app):
     """Connect this database to provided Flask app.
 
