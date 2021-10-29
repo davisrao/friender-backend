@@ -179,3 +179,22 @@ def delete_user(user_id):
     db.session.commit()
 
     return ({"deleted":user_id})
+
+@app.get('/potentials/<zip_code>')
+def get_users_by_zip_code(zip_code):
+    """Get users by zipcode. 
+    Returns [{
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "hobbies",
+            "interests",
+            "zip_code",
+            "image"         
+        }, ...]
+    """
+
+    filtered_users = User.query.filter_by(zip_code=zip_code).all()
+    serialized = [User.serialize(user) for user in filtered_users]
+    return jsonify(users=serialized)
