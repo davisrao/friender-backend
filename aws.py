@@ -1,15 +1,11 @@
-# from logging import debug
 from werkzeug.utils import secure_filename
 import os
 import boto3
 
-from flask import Flask, jsonify, request, flash, redirect, session, g
-# from flask_debugtoolbar import DebugToolbarExtension
+from flask import Flask
 from flask_bcrypt import Bcrypt
-from sqlalchemy.exc import IntegrityError
 
-# from forms import CSRFOnlyForm, EditUserForm, UserAddForm, LoginForm, MessageForm
-from models import db, connect_db, User
+from models import connect_db
 
 import dotenv
 dotenv.load_dotenv()
@@ -30,8 +26,6 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 # toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
-
-
 
 img = "./rithm.png"
 

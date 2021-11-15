@@ -6,10 +6,8 @@ from flask_jwt_extended import create_access_token, JWTManager
 
 
 from flask import Flask, jsonify, request
-# from flask_debugtoolbar import DebugToolbarExtension
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
-# from forms import CSRFOnlyForm, EditUserForm, UserAddForm, LoginForm, MessageForm
 from models import db, connect_db, User, Action
 
 import dotenv
@@ -197,6 +195,7 @@ def get_users_by_zip_code(zip_code):
     """
 
     filtered_users = User.query.filter_by(zip_code=zip_code).all()
+    breakpoint()
     serialized = [User.serialize(user) for user in filtered_users]
     # pass in user id
     # derive from user id zip_code of passed in user_id
@@ -247,14 +246,12 @@ def get_potential_matches_by_zip_code(user_id,zip_code):
     # query the Action table here are all the ids of the ppl that user has acted on
     actions = Action.query.filter_by(acting_user_id=user_id).all()
     print(actions)
-    # breakpoint()
     acted_upon_users = [action.targeted_user_id for action in actions]
     
     filtered_users = User.query.filter(
         (~(User.user_id.in_(acted_upon_users))),
-        zip_code==zip_code
+        (User.zip_code==zip_code)
     ).all()
-
 
     serialized = [User.serialize(user) for user in filtered_users]
     # pass in user id
@@ -262,7 +259,38 @@ def get_potential_matches_by_zip_code(user_id,zip_code):
     # User.query.filter_by(zip_code=zip_code, user_id).all()
     return jsonify(users=serialized)
 
-    #TODO: add match functionality to get users we've matched with. requires DB query
+
+@app.get('/<int:user_id>/matches')
+def get_matches_for_user(user_id):
+    """Get matches for the current user by zipcode 
+    Returns JSON of user data details 
+    [{
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "hobbies",
+            "interests",
+            "zip_code",
+            "image"         
+        }, ...]
+    """
+
+    usersILiked = Action.query.filter(Action.action=="Like",Action.acting_user_id==user_id).all()
+    likedUserIds = [u.targeted_user_id for u in usersILiked]
+
+    usersLikedMe = Action.query.filter(Action.action=="Like",Action.targeted_user_id==user_id).all()
+    likingUserIds = [u.acting_user_id for u in usersLikedMe]
+
+    matchIds = [u for u in likedUserIds if u in likingUserIds]
+
+    matchUsers = [User.query.get(u) for u in matchIds]
+
+    serialized = [User.serialize(user) for user in matchUsers]
+
+    return jsonify(users=serialized)
+
+
     #TODO: add message functionality which will enable users to message their matches
     #TODO: get rid of unused imports and add in docstrings
     #TODO: Add AWS call into its own file

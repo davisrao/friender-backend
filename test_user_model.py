@@ -13,8 +13,8 @@ from flask_bcrypt import Bcrypt
 # from sqlalchemy import exc
 
 
-# BEFORE we import our app, let's set an environmental variable
-# to use a different database for tests (we need to do this
+# BEFORE we import our app, setting an environmental variable
+# to use a different database for tests (need to do this
 # before we import our app, since that will have already
 # connected to the database
 
@@ -141,6 +141,8 @@ class UserModelTestCase(TestCase):
         #tests successful password hash
         self.assertTrue(bcrypt.check_password_hash(test_user_sign_up.password, "password"))
 
+    # importing some test frameworks below: 
+
     # def test_serialize(self):
     #     """Does signup return the correct user"""
 
@@ -153,9 +155,6 @@ class UserModelTestCase(TestCase):
     #     self.assertEqual(test_user_serialize, {
     #         'username':"u", 'first_name':"u_firstName", 'last_name':"u_lastName", 'email':"u@utest.com", 'hobbies':"u_hobbies", 'interests':"u_interests", 'zip_code':"12345", 'image':"u.png",'password':"password"
     #     })
-
-
-
 
 #TODO: Test unhappy paths, test serialize
 
