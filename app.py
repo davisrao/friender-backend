@@ -82,7 +82,7 @@ def list_users():
 
 @app.get('/users/<int:user_id>')
 def get_user(user_id):
-    """Show user profile."""
+    """return user profile data {user:[{userData}]}"""
     user = User.query.get_or_404(user_id)
     serialize = User.serialize(user)
 
@@ -117,10 +117,6 @@ def create_user():
             ExtraArgs={"ACL":"public-read"}
         )
 
-        #TODO: dont seem to need this to pull image but keeping in case it breaks because we know it can work
-        # user_image_url = boto3.client('s3').generate_presigned_url(
-        #     ClientMethod='get_object', 
-        #     Params={'Bucket': os.environ['BUCKET'], 'Key': user_image_name}, ExpiresIn=6000)
     try:
         user = User.signup(
                 username=request.form["username"],
@@ -179,30 +175,30 @@ def delete_user(user_id):
 
     return ({"deleted":user_id})
 
-@app.get('/potentials/<zip_code>')
-def get_users_by_zip_code(zip_code):
-    """Get users by zipcode. 
-    Returns [{
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-            "hobbies",
-            "interests",
-            "zip_code",
-            "image"         
-        }, ...]
-    """
+# @app.get('/potentials/<zip_code>')
+# def get_users_by_zip_code(zip_code):
+#     """Get users by zipcode. 
+#     Returns [{
+#             "username",
+#             "first_name",
+#             "last_name",
+#             "email",
+#             "hobbies",
+#             "interests",
+#             "zip_code",
+#             "image"         
+#         }, ...]
+#     """
 
-    filtered_users = User.query.filter_by(zip_code=zip_code).all()
-    breakpoint()
-    serialized = [User.serialize(user) for user in filtered_users]
-    # pass in user id
-    # derive from user id zip_code of passed in user_id
-    # query the Action table here are all the ids of the ppl that user has acted on
-    # list of pp yu acted on =Action.query.filter_by(acting_user=user_id).all()
-    # User.query.filter_by(zip_code=zip_code, user_id).all()
-    return jsonify(users=serialized)
+#     filtered_users = User.query.filter_by(zip_code=zip_code).all()
+#     breakpoint()
+#     serialized = [User.serialize(user) for user in filtered_users]
+#     # pass in user id
+#     # derive from user id zip_code of passed in user_id
+#     # query the Action table here are all the ids of the ppl that user has acted on
+#     # list of pp yu acted on =Action.query.filter_by(acting_user=user_id).all()
+#     # User.query.filter_by(zip_code=zip_code, user_id).all()
+#     return jsonify(users=serialized)
 
 # Auth Routes
 @app.post('/action')
@@ -229,7 +225,8 @@ def add_action():
 
 @app.get('/potentials/<int:user_id>/<zip_code>')
 def get_potential_matches_by_zip_code(user_id,zip_code):
-    """Get users by zipcode and filters on people who this person has not yet liked. 
+    """Get users by zipcode and filters on people who this person has not yet liked
+    Filters based on zip code and ensures user is not the active user 
     Returns JSON of user data details 
     [{
             "username",
@@ -248,15 +245,15 @@ def get_potential_matches_by_zip_code(user_id,zip_code):
     print(actions)
     acted_upon_users = [action.targeted_user_id for action in actions]
     
+    #filter so that we only see ppl user has not acted on + users in zip code + not themself
     filtered_users = User.query.filter(
         (~(User.user_id.in_(acted_upon_users))),
-        (User.zip_code==zip_code)
+        (User.zip_code==zip_code),
+        (User.user_id != user_id)
     ).all()
 
     serialized = [User.serialize(user) for user in filtered_users]
-    # pass in user id
-    # derive from user id zip_code of passed in user_id
-    # User.query.filter_by(zip_code=zip_code, user_id).all()
+
     return jsonify(users=serialized)
 
 
@@ -292,5 +289,4 @@ def get_matches_for_user(user_id):
 
 
     #TODO: add message functionality which will enable users to message their matches
-    #TODO: get rid of unused imports and add in docstrings
     #TODO: Add AWS call into its own file
