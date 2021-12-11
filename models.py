@@ -63,6 +63,9 @@ class User(db.Model):
         db.Text,
         nullable=False,
     )
+    
+    def __repr__(self):
+        return f"<User #{self.user_id}: {self.username}>"
 
     @classmethod
     def serialize(cls, self):
@@ -147,7 +150,7 @@ class Action(db.Model):
     targeted_user_id = db.Column(
         db.Integer,
         db.ForeignKey('users.user_id', ondelete="cascade"),
-        primary_key=True,
+        primary_key=True
     )
 
     action = db.Column(

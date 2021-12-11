@@ -34,7 +34,7 @@ db.create_all()
 
 
 class UserModelTestCase(TestCase):
-    """Test views for messages."""
+    """Test for User Model."""
 
     def setUp(self):
         """Create test client, add sample data."""
@@ -67,10 +67,16 @@ class UserModelTestCase(TestCase):
         )
 
 
+        #add and commit that to the db
         db.session.add(test_u1)
         db.session.add(test_u2)
 
         db.session.commit()
+
+        #grabbing here as we are not sure what we are gonna get as ID because 
+        # of auto incrementing primary key
+        self.test_u1_id = test_u1.user_id
+        self.test_u2_id = test_u2.user_id
     
     def tearDown(self):
         """Stuff to do after every test."""
@@ -99,21 +105,18 @@ class UserModelTestCase(TestCase):
         totalUsers = User.query.all()
         self.assertEqual(len(totalUsers), 3)
 
-    # def test_repr_method(self):
-    #     """does the repr method work?"""
+    def test_repr_method(self):
+        """does the repr method work?"""
 
-    #     test_user = User.query.get(self.test_u1_id)
-        
-    #     self.assertEqual(test_user.__repr__(), f"<User #{test_user.id}: {test_user.username}, {test_user.email}>")
+        test_user = User.query.get(self.test_u1_id)
+        breakpoint()
+        self.assertEqual(test_user.__repr__(), f"<User #{self.test_u1_id}: {test_user.username}>")
 
 
     def test_user_signup(self):
         """Does signup return the correct user"""
 
         test_user_sign_up = User.signup("u", "u_firstName", "u_lastName", "u@utest.com", "u_hobbies", "u_interests", "12345", "u.png","password")
-        # test_user_sign_up_2 = User.signup("Davis", "test1@test.com", "testing123", "/static/images/pic.png")
-
-        # db.session.commit()
 
         #tests successful username entered
         self.assertEqual(test_user_sign_up.username, "u")
@@ -141,22 +144,17 @@ class UserModelTestCase(TestCase):
         #tests successful password hash
         self.assertTrue(bcrypt.check_password_hash(test_user_sign_up.password, "password"))
 
-    # importing some test frameworks below: 
 
-    # def test_serialize(self):
-    #     """Does signup return the correct user"""
+    def test_serialize(self):
+        """Does serialize method on the class work"""
+        user_queried=User.query.get(self.test_u1_id)
+        test_user_serialize = User.serialize(user_queried)
 
-    #     test_user_serialize = User.serialize({'username':"u", 'first_name':"u_firstName", 'last_name':"u_lastName", 'email':"u@utest.com", 'hobbies':"u_hobbies", 'interests':"u_interests", 'zip_code':"12345", 'image':"u.png",'password':"password"})
-    #     # test_user_sign_up_2 = User.signup("Davis", "test1@test.com", "testing123", "/static/images/pic.png")
+        self.assertEqual(test_user_serialize['username'], "u1_username")
+        self.assertEqual(test_user_serialize['hobbies'], "u1_hobbies")
+        self.assertEqual(test_user_serialize['user_id'], self.test_u1_id)
 
-    #     # db.session.commit()
-
-    #     #tests successful username entered
-    #     self.assertEqual(test_user_serialize, {
-    #         'username':"u", 'first_name':"u_firstName", 'last_name':"u_lastName", 'email':"u@utest.com", 'hobbies':"u_hobbies", 'interests':"u_interests", 'zip_code':"12345", 'image':"u.png",'password':"password"
-    #     })
-
-#TODO: Test unhappy paths, test serialize
+#TODO: Test unhappy paths
 
     # def test_unsuccessful_email_signup(self):
     #     """testing if error raises on blank email"""
