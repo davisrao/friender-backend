@@ -175,30 +175,6 @@ def delete_user(user_id):
 
     return ({"deleted":user_id})
 
-# @app.get('/potentials/<zip_code>')
-# def get_users_by_zip_code(zip_code):
-#     """Get users by zipcode. 
-#     Returns [{
-#             "username",
-#             "first_name",
-#             "last_name",
-#             "email",
-#             "hobbies",
-#             "interests",
-#             "zip_code",
-#             "image"         
-#         }, ...]
-#     """
-
-#     filtered_users = User.query.filter_by(zip_code=zip_code).all()
-#     breakpoint()
-#     serialized = [User.serialize(user) for user in filtered_users]
-#     # pass in user id
-#     # derive from user id zip_code of passed in user_id
-#     # query the Action table here are all the ids of the ppl that user has acted on
-#     # list of pp yu acted on =Action.query.filter_by(acting_user=user_id).all()
-#     # User.query.filter_by(zip_code=zip_code, user_id).all()
-#     return jsonify(users=serialized)
 
 # Auth Routes
 @app.post('/action')

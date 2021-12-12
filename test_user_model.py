@@ -12,11 +12,8 @@ from models import db, User
 from flask_bcrypt import Bcrypt
 # from sqlalchemy import exc
 
-
-# BEFORE we import our app, setting an environmental variable
-# to use a different database for tests (need to do this
-# before we import our app, since that will have already
-# connected to the database
+# Setting env variable to use different DB for tests.
+# need to do before the app is imported.
 
 os.environ['DATABASE_URL'] = "postgresql:///friender_test"
 
@@ -26,9 +23,8 @@ from app import app
 
 bcrypt = Bcrypt()
 
-# Create our tables (we do this here, so we only create the tables
-# once for all tests --- in each test, we'll delete the data
-# and create fresh new clean test data
+# Create our tables once
+# after / before each we'll refresh the data inside
 
 db.create_all()
 
@@ -109,7 +105,7 @@ class UserModelTestCase(TestCase):
         """does the repr method work?"""
 
         test_user = User.query.get(self.test_u1_id)
-        breakpoint()
+
         self.assertEqual(test_user.__repr__(), f"<User #{self.test_u1_id}: {test_user.username}>")
 
 
@@ -154,79 +150,35 @@ class UserModelTestCase(TestCase):
         self.assertEqual(test_user_serialize['hobbies'], "u1_hobbies")
         self.assertEqual(test_user_serialize['user_id'], self.test_u1_id)
 
-#TODO: Test unhappy paths
 
-    # def test_unsuccessful_email_signup(self):
-    #     """testing if error raises on blank email"""
-    #     test_user_sign_up = User.signup("Jeanne", None, "testing123", None)
+    def test_successful_authentication(self):
+        """checks to see if user is successfully authenticated with correct UN and PW"""
+        u = User.signup(
+            username="u_username",
+            first_name="u_firstName",
+            last_name="u_lastName",
+            email="u@test.com",
+            hobbies="u_hobbies",
+            interests="u_interests",
+            zip_code="12345",
+            image="u_username.png",
+            password="test123"
+        )
+        db.session.add(u)
+        db.session.commit()
+        self.assertTrue(u.authenticate(u.username,"test123"))
 
-    #     db.session.add(test_user_sign_up)
+    def test_failed_password_authentication(self):
+        """checks to see if user is NOT authenticated with incorrect PW"""
+        user_queried=User.query.get(self.test_u1_id)
 
-    #     with self.assertRaises(exc.IntegrityError):
-    #         db.session.commit()
+        with self.assertRaises(ValueError):
+            user_queried.authenticate(user_queried.username,"wrongpass")
 
-    # def test_unsuccessful_username_signup(self):
-    #     """testing if error raises on blank UN"""
-    #     test_user_sign_up = User.signup(None, "test123@test.com", "testing123", None)
+    def test_failed_username_authentication(self):
+        """checks to see if user is NOT authenticated with incorrect UN"""
+        user_queried=User.query.get(self.test_u1_id)
 
-    #     db.session.add(test_user_sign_up)
+        self.assertFalse(user_queried.authenticate("wrong","test123"))
 
-    #     with self.assertRaises(exc.IntegrityError):
-    #         db.session.commit()
-    
-    # def test_unsuccessful_password_signup(self):
-    #     """testing if error raises on blank password"""
-
-    #     with self.assertRaises(ValueError):
-    #         User.signup("Jeanne", "test1234@test.com", None , None)
-
-    # def test_successful_follow(self):
-    #     """does is following detect succeesful follow
-    #     does is following know when somebody is not following
-    #     does is followed by detect both successful followed by and not followed by"""
-
-    #     user_1 = User.query.get(self.test_u1_id)
-    #     user_2 = User.query.get(self.test_u2_id)
-
-    #     user_1.following.append(user_2)
-
-    #     db.session.commit()
-
-    #     # tests if user_1 is following user_2 and if user_2 is followed by user_1
-    #     self.assertTrue(user_1.is_following(user_2))
-    #     self.assertTrue(user_2.is_followed_by(user_1))
-
-    #     # tests to make sure that user_2 is not following user_1 and user_2 is not following user_1
-    #     # since we set it up that way
-    #     self.assertFalse(user_2.is_following(user_1))
-    #     self.assertFalse(user_1.is_followed_by(user_2))
-
-
-    # def test_successful_authentication(self):
-    #     """checks to see if user is successfully authenticated with correct UN and PW"""
-
-
-    #     user_4 = User.signup(
-    #             username="my_user",
-    #             password="test_my_user",
-    #             email="email@testuser.com",
-    #             image_url=User.image_url.default.arg,
-    #         )
-
-    #     db.session.commit()
-
-    #     self.assertTrue(user_4.authenticate(user_4.username,"test_my_user"))
-
-    # def test_failed_password_authentication(self):
-    #     """checks to see if user is NOT authenticated with incorrect PW"""
-    #     user_1 = User.query.get(self.test_u1_id)
-
-    #     with self.assertRaises(ValueError):
-    #         user_1.authenticate(user_1.username,"12345")
-
-    # def test_failed_username_authentication(self):
-    #     """checks to see if user is NOT authenticated with incorrect UN"""
-    #     user_1 = User.query.get(self.test_u1_id)
-
-    #     self.assertFalse(user_1.authenticate("123","pass1"))
-
+#TODO: Test unhappy paths for sign up

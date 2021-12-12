@@ -52,9 +52,6 @@ class User(db.Model):
         nullable=False,
     )
 
-    #TODO: create friend radius table
-    #TODO: default image for image
-
     image = db.Column(
         db.Text,
     )
@@ -99,7 +96,7 @@ class User(db.Model):
         Hashes password and adds user to system.
         """
 
-        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('utf-8')
 
         user = User(
             username=username,
@@ -118,6 +115,7 @@ class User(db.Model):
         # print (user.user_id)
         return user
 
+
     @classmethod
     def authenticate(cls, username, password):
         """Find user with `username` and `password`.
@@ -130,7 +128,6 @@ class User(db.Model):
         """
 
         user = cls.query.filter_by(username=username).first()
-
         if user:
             is_auth = bcrypt.check_password_hash(user.password, password)
             if is_auth:
@@ -187,3 +184,7 @@ def connect_db(app):
     """
     db.app = app
     db.init_app(app)
+
+
+
+    
