@@ -1,4 +1,4 @@
-"""Seed database with sample data from CSV Files."""
+"""sets up tables in DB"""
 
 from app import db
 

@@ -36,6 +36,7 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 connect_db(app)
 
+# client for s3 upload photos 
 s3 = boto3.client(
   "s3",
   "us-west-1",
@@ -64,8 +65,6 @@ def login_user():
         return jsonify(token=access_token)
     else:
         return {"errors": "Username/password is incorrect." }
-        # refactor: maybe refactor how errors are handled
-
 
 ##############################################################################
 # User Routes
@@ -105,8 +104,7 @@ def create_user():
         }
     """
 
-    print("request: ", request)
-
+    #photos are added to s3
     img = request.files['file']
     if img:
         filename = secure_filename(img.filename)
@@ -136,7 +134,6 @@ def create_user():
     serialized = User.serialize(user)
     access_token = create_access_token(identity=serialized)
     return jsonify(token=access_token)
-    # return jsonify(user=serialized)
 
 @app.patch('/users/<int:user_id>')
 def edit_user(user_id):
@@ -155,7 +152,6 @@ def edit_user(user_id):
     user = User.query.get_or_404(user_id)
     newData = request.json
     for key, value in newData.items():
-        # user[key] = value
         setattr(user,key,value)
     
     db.session.add(user)
@@ -262,7 +258,3 @@ def get_matches_for_user(user_id):
     serialized = [User.serialize(user) for user in matchUsers]
 
     return jsonify(users=serialized)
-
-
-    #TODO: add message functionality which will enable users to message their matches
-    #TODO: Add AWS call into its own file

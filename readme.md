@@ -24,6 +24,7 @@
 * create gitignore file with __pycache__, .env, and /venv
 
 # TODO: what would I like to do here with more time?
+* Biggest thing is ensuring the g is used in flask - when there is a login, we need to say add this user to flask g and then ensure login on each subsequent check.
 * Testing - build out more tests to improve coverage. Add tests to react app + routes for users etc. 
 * Log out btn :)
 * Move AWS to its own file so we arent just doing in the app
